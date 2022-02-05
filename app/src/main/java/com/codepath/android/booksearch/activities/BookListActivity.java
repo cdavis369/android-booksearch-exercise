@@ -8,6 +8,9 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.MenuItemCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -30,6 +33,8 @@ public class BookListActivity extends AppCompatActivity {
     private BookAdapter bookAdapter;
     private BookClient client;
     private ArrayList<Book> abooks;
+    private Toolbar toolbar;
+    private String query;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,12 +47,16 @@ public class BookListActivity extends AppCompatActivity {
 
         rvBooks = findViewById(R.id.rvBooks);
         abooks = new ArrayList<>();
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar((toolbar));
+
 
         // Initialize the adapter
         bookAdapter = new BookAdapter(this, abooks);
         bookAdapter.setOnItemClickListener(new BookAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(View itemView, int position) {
+
                 Toast.makeText(
                         BookListActivity.this,
                         "An item at position " + position + " clicked!",
@@ -70,9 +79,9 @@ public class BookListActivity extends AppCompatActivity {
 
         // Set layout manager to position the items
         rvBooks.setLayoutManager(new LinearLayoutManager(this));
+        //fetchBooks("");
 
-        // Fetch the data remotely
-        fetchBooks("Oscar Wilde");
+
     }
 
     // Executes an API call to the OpenLibrary search endpoint, parses the results
@@ -120,7 +129,26 @@ public class BookListActivity extends AppCompatActivity {
         // Checkpoint #4
         // Add SearchView to Toolbar
         // Refer to http://guides.codepath.org/android/Extended-ActionBar-Guide#adding-searchview-to-actionbar guide for more details
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) searchItem.getActionView();
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                // perform query here
+                fetchBooks(query);
+                // workaround to avoid issues with some emulators and keyboard devices firing twice if a keyboard enter is used
+                // see https://code.google.com/p/android/issues/detail?id=24599
+                searchView.clearFocus();
 
+                return true;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                query = newText;
+                return false;
+            }
+        });
 
         // Checkpoint #7 Show Progress Bar
         // see https://guides.codepath.org/android/Handling-ProgressBars#progress-within-actionbar
